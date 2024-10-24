@@ -71,37 +71,45 @@ export default function Home() {
     }, []);
     setGroupedPairs(grouped);
     setGameStarted(true);
-    
+
     const levelPairs = grouped[0];
-    const gameCards = [...levelPairs.map(pair => ({
-      content: pair.hiragana,
-      type: 'hiragana',
-      matched: false,
-      pairId: pair.romaji,
-      id: Math.random()
-    })),
-    ...levelPairs.map(pair => ({
-      content: pair.romaji,
-      type: 'romaji',
-      matched: false,
-      pairId: pair.romaji,
-      id: Math.random()
-    }))];
-    
+    const gameCards = [
+      ...levelPairs.map((pair) => ({
+        content: pair.hiragana,
+        type: "hiragana",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+      ...levelPairs.map((pair) => ({
+        content: pair.romaji,
+        type: "romaji",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+    ];
+
     setCards(gameCards.sort(() => Math.random() - 0.5));
   };
 
   const handleCardClick = (clickedCard) => {
-    if (selectedCards.length === 2) return;
-    if (selectedCards.some((card) => card.id === clickedCard.id)) return;
     if (clickedCard.matched) return;
+
+    if (selectedCards.some((card) => card.id === clickedCard.id)) {
+      setSelectedCards(
+        selectedCards.filter((card) => card.id !== clickedCard.id)
+      );
+      return;
+    }
 
     const newSelectedCards = [...selectedCards, clickedCard];
     setSelectedCards(newSelectedCards);
 
     if (newSelectedCards.length === 2) {
       if (newSelectedCards[0].pairId === newSelectedCards[1].pairId) {
-        setScore((prev) => prev + 1);
+        const newScore = score + 1;
+        setScore(newScore);
         setCards(
           cards.map((card) =>
             card.pairId === newSelectedCards[0].pairId
@@ -109,72 +117,91 @@ export default function Home() {
               : card
           )
         );
-      }
-
-      setTimeout(() => {
         setSelectedCards([]);
-      }, 1000);
+
+        // Check if all pairs are matched
+        if (newScore === pairsPerLevel) {
+          setTimeout(() => {
+            nextLevel();
+          }, 500);
+        }
+      } else {
+        setTimeout(() => {
+          setSelectedCards([]);
+        }, 1000);
+      }
     }
   };
 
   const nextLevel = () => {
-    const unmatchedPairs = groupedPairs[currentLevel].filter(pair => 
-      !cards.find(card => card.pairId === pair.romaji && card.matched)
-    );
-    
-    setMissedPairs(prev => [...prev, ...unmatchedPairs]);
-  
+    // Only get pairs that weren't matched at all
+    const unmatchedPairs = groupedPairs[currentLevel]
+      .filter(
+        (pair) =>
+          !cards.find((card) => card.pairId === pair.romaji && card.matched)
+      )
+      .filter(
+        (pair) =>
+          // Exclude the last matched pair from being added to review
+          !selectedCards.some((selected) => selected.pairId === pair.romaji)
+      );
+
+    setMissedPairs((prev) => [...prev, ...unmatchedPairs]);
+
     if (currentLevel < groupedPairs.length - 1) {
       const nextLevelIndex = currentLevel + 1;
       setCurrentLevel(nextLevelIndex);
-      
+
       const levelPairs = groupedPairs[nextLevelIndex];
-      const gameCards = [...levelPairs.map(pair => ({
-        content: pair.hiragana,
-        type: 'hiragana',
-        matched: false,
-        pairId: pair.romaji,
-        id: Math.random()
-      })),
-      ...levelPairs.map(pair => ({
-        content: pair.romaji,
-        type: 'romaji',
-        matched: false,
-        pairId: pair.romaji,
-        id: Math.random()
-      }))];
-      
+      const gameCards = [
+        ...levelPairs.map((pair) => ({
+          content: pair.hiragana,
+          type: "hiragana",
+          matched: false,
+          pairId: pair.romaji,
+          id: Math.random(),
+        })),
+        ...levelPairs.map((pair) => ({
+          content: pair.romaji,
+          type: "romaji",
+          matched: false,
+          pairId: pair.romaji,
+          id: Math.random(),
+        })),
+      ];
+
       setCards(gameCards.sort(() => Math.random() - 0.5));
       setScore(0);
       setSelectedCards([]);
     }
   };
-  
 
-  const initializeLevel = (level) => {
-    const levelPairs = groupedPairs[level] || [];
-    if (levelPairs.length === 0) return;
-  
-    const gameCards = [...levelPairs.map(pair => ({
-      content: pair.hiragana,
-      type: 'hiragana',
-      matched: false,
-      pairId: pair.romaji,
-      id: Math.random()
-    })),
-    ...levelPairs.map(pair => ({
-      content: pair.romaji,
-      type: 'romaji',
-      matched: false,
-      pairId: pair.romaji,
-      id: Math.random()
-    }))];
-    
-    setCards(gameCards.sort(() => Math.random() - 0.5));
-    setScore(0);
-    setSelectedCards([]);
-  };
-  
+  // const initializeLevel = (level) => {
+  //   const levelPairs = groupedPairs[level] || [];
+  //   if (levelPairs.length === 0) return;
+
+  //   const gameCards = [
+  //     ...levelPairs.map((pair) => ({
+  //       content: pair.hiragana,
+  //       type: "hiragana",
+  //       matched: false,
+  //       pairId: pair.romaji,
+  //       id: Math.random(),
+  //     })),
+  //     ...levelPairs.map((pair) => ({
+  //       content: pair.romaji,
+  //       type: "romaji",
+  //       matched: false,
+  //       pairId: pair.romaji,
+  //       id: Math.random(),
+  //     })),
+  //   ];
+
+  //   setCards(gameCards.sort(() => Math.random() - 0.5));
+  //   setScore(0);
+  //   setSelectedCards([]);
+  // };
+
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
@@ -223,21 +250,42 @@ export default function Home() {
         </div>
       )}
 
-      <div className="grid grid-cols-4 md:grid-cols-5 gap-4 w-full max-w-4xl">
-        {cards &&
-          cards.map((card) => (
-            <Card
-              key={card.id}
-              item={card.content}
-              type={card.type}
-              isFlipped={true}
-              isSelected={selectedCards.some(
-                (selected) => selected.id === card.id
-              )}
-              isMatched={card.matched}
-              onClick={() => handleCardClick(card)}
-            />
-          ))}
+      <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
+          {cards
+            .filter((card) => card.type === "hiragana")
+            .map((card) => (
+              <Card
+                key={card.id}
+                item={card.content}
+                type={card.type}
+                isFlipped={true}
+                isSelected={selectedCards.some(
+                  (selected) => selected.id === card.id
+                )}
+                isMatched={card.matched}
+                onClick={() => handleCardClick(card)}
+              />
+            ))}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
+          {cards
+            .filter((card) => card.type === "romaji")
+            .map((card) => (
+              <Card
+                key={card.id}
+                item={card.content}
+                type={card.type}
+                isFlipped={true}
+                isSelected={selectedCards.some(
+                  (selected) => selected.id === card.id
+                )}
+                isMatched={card.matched}
+                onClick={() => handleCardClick(card)}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );
