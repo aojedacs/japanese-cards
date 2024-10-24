@@ -7,15 +7,10 @@ const geistSans = localFont({
   variable: "--font-geist-sans",
   weight: "100 900",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
 const notoSansJP = Noto_Sans_JP({
   preload: true,
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["100","400", "500", "700"],
 });
 
 export const metadata = {

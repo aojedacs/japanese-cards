@@ -60,6 +60,7 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const [missedPairs, setMissedPairs] = useState([]);
   const [incorrectPairs, setIncorrectPairs] = useState([]);
+  const [gameMode, setGameMode] = useState("normal"); // 'normal', 'review', 'completed'
 
   const startGame = (pairsCount) => {
     setPairsPerLevel(pairsCount);
@@ -125,56 +126,159 @@ export default function Home() {
           }, 500);
         }
       } else {
+        // Add incorrect pair to review
+        const incorrectPair = groupedPairs[currentLevel].find(
+          (pair) =>
+            pair.romaji === newSelectedCards[0].pairId ||
+            pair.romaji === newSelectedCards[1].pairId
+        );
+        setMissedPairs((prev) => {
+          // Check if pair already exists in review
+          if (!prev.some((p) => p.romaji === incorrectPair.romaji)) {
+            return [...prev, incorrectPair];
+          }
+          return prev;
+        });
+
         setIncorrectPairs(newSelectedCards);
         setTimeout(() => {
           setIncorrectPairs([]);
           setSelectedCards([]);
-        }, 500);
+        }, 1000);
       }
     }
   };
 
+  // const nextLevel = () => {
+  //   // Only get pairs that weren't matched at all
+  //   const unmatchedPairs = groupedPairs[currentLevel]
+  //     .filter(
+  //       (pair) =>
+  //         !cards.find((card) => card.pairId === pair.romaji && card.matched)
+  //     )
+  //     .filter(
+  //       (pair) =>
+  //         // Exclude the last matched pair from being added to review
+  //         !selectedCards.some((selected) => selected.pairId === pair.romaji)
+  //     );
+
+  //   setMissedPairs((prev) => [...prev, ...unmatchedPairs]);
+
+  //   if (currentLevel < groupedPairs.length - 1) {
+  //     const nextLevelIndex = currentLevel + 1;
+  //     setCurrentLevel(nextLevelIndex);
+
+  //     const levelPairs = groupedPairs[nextLevelIndex];
+  //     const gameCards = [
+  //       ...levelPairs.map((pair) => ({
+  //         content: pair.hiragana,
+  //         type: "hiragana",
+  //         matched: false,
+  //         pairId: pair.romaji,
+  //         id: Math.random(),
+  //       })),
+  //       ...levelPairs.map((pair) => ({
+  //         content: pair.romaji,
+  //         type: "romaji",
+  //         matched: false,
+  //         pairId: pair.romaji,
+  //         id: Math.random(),
+  //       })),
+  //     ];
+
+  //     setCards(gameCards.sort(() => Math.random() - 0.5));
+  //     setScore(0);
+  //     setSelectedCards([]);
+  //   }
+  // };
+
   const nextLevel = () => {
-    // Only get pairs that weren't matched at all
-    const unmatchedPairs = groupedPairs[currentLevel]
-      .filter(
-        (pair) =>
-          !cards.find((card) => card.pairId === pair.romaji && card.matched)
-      )
-      .filter(
-        (pair) =>
-          // Exclude the last matched pair from being added to review
-          !selectedCards.some((selected) => selected.pairId === pair.romaji)
-      );
+    const unmatchedPairs = groupedPairs[currentLevel].filter(
+      (pair) =>
+        !cards.find((card) => card.pairId === pair.romaji && card.matched) &&
+        !selectedCards.some((selected) => selected.pairId === pair.romaji)
+    );
 
     setMissedPairs((prev) => [...prev, ...unmatchedPairs]);
 
     if (currentLevel < groupedPairs.length - 1) {
       const nextLevelIndex = currentLevel + 1;
       setCurrentLevel(nextLevelIndex);
-
-      const levelPairs = groupedPairs[nextLevelIndex];
-      const gameCards = [
-        ...levelPairs.map((pair) => ({
-          content: pair.hiragana,
-          type: "hiragana",
-          matched: false,
-          pairId: pair.romaji,
-          id: Math.random(),
-        })),
-        ...levelPairs.map((pair) => ({
-          content: pair.romaji,
-          type: "romaji",
-          matched: false,
-          pairId: pair.romaji,
-          id: Math.random(),
-        })),
-      ];
-
-      setCards(gameCards.sort(() => Math.random() - 0.5));
-      setScore(0);
-      setSelectedCards([]);
+      initializeLevel(nextLevelIndex);
+    } else {
+      setGameMode("completed");
     }
+  };
+
+  const startReviewMode = () => {
+    setGameMode("review");
+    const reviewCards = [
+      ...missedPairs.map((pair) => ({
+        content: pair.hiragana,
+        type: "hiragana",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+      ...missedPairs.map((pair) => ({
+        content: pair.romaji,
+        type: "romaji",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+    ];
+
+    setCards(reviewCards.sort(() => Math.random() - 0.5));
+    setScore(0);
+    setPairsPerLevel(missedPairs.length);
+    setMissedPairs([]); // Clear the review pairs list
+  };
+
+  const resetGame = () => {
+    setGameMode("normal");
+    setCurrentLevel(0);
+    setMissedPairs([]);
+    setScore(0);
+    initializeLevel(0);
+  };
+
+  const initializeLevel = (level) => {
+    const levelPairs = groupedPairs[level];
+    if (!levelPairs) return;
+
+    const gameCards = [
+      ...levelPairs.map((pair) => ({
+        content: pair.hiragana,
+        type: "hiragana",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+      ...levelPairs.map((pair) => ({
+        content: pair.romaji,
+        type: "romaji",
+        matched: false,
+        pairId: pair.romaji,
+        id: Math.random(),
+      })),
+    ];
+
+    setCards(gameCards.sort(() => Math.random() - 0.5));
+    setScore(0);
+    setSelectedCards([]);
+  };
+
+  // Add this function near your other game control functions
+  const backToStart = () => {
+    setGameStarted(false);
+    setCurrentLevel(0);
+    setMissedPairs([]);
+    setScore(0);
+    setCards([]);
+    setSelectedCards([]);
+    setGameMode("normal");
+    setPairsPerLevel(null);
   };
 
   if (!gameStarted) {
@@ -193,14 +297,19 @@ export default function Home() {
             </button>
           ))}
         </div>
-
       </div>
     );
   }
   return (
     <div className="flex min-h-screen h-full gap-8 p-4">
       <div className="flex-1 flex flex-col gap-8">
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between w-full items-center">
+          <button
+            onClick={backToStart}
+            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            ← Back to Start
+          </button>
           <div className="text-2xl font-bold">Level {currentLevel + 1}</div>
           <div className="text-2xl font-bold">
             Score: {score}/{pairsPerLevel}
@@ -218,6 +327,7 @@ export default function Home() {
             {cards
               .filter((card) => card.type === "hiragana")
               .map((card) => (
+                // In the cards mapping section, add the isDisabled logic:
                 <Card
                   key={card.id}
                   item={card.content}
@@ -230,6 +340,11 @@ export default function Home() {
                   isIncorrect={incorrectPairs.some(
                     (incorrect) => incorrect.id === card.id
                   )}
+                  isDisabled={
+                    selectedCards.length === 1 &&
+                    selectedCards[0].type === card.type &&
+                    selectedCards[0].id !== card.id
+                  }
                   onClick={() => handleCardClick(card)}
                 />
               ))}
@@ -239,6 +354,7 @@ export default function Home() {
             {cards
               .filter((card) => card.type === "romaji")
               .map((card) => (
+                // In the cards mapping section, add the isDisabled logic:
                 <Card
                   key={card.id}
                   item={card.content}
@@ -251,6 +367,11 @@ export default function Home() {
                   isIncorrect={incorrectPairs.some(
                     (incorrect) => incorrect.id === card.id
                   )}
+                  isDisabled={
+                    selectedCards.length === 1 &&
+                    selectedCards[0].type === card.type &&
+                    selectedCards[0].id !== card.id
+                  }
                   onClick={() => handleCardClick(card)}
                 />
               ))}
@@ -275,6 +396,29 @@ export default function Home() {
           ))}
         </div>
       </div>
+      {gameMode === "completed" && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg flex flex-col gap-4">
+            <h2 className="text-2xl font-bold text-center">Game Completed!</h2>
+            {missedPairs.length > 0 ? (
+              <button
+                onClick={startReviewMode}
+                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Practice Review Pairs ({missedPairs.length})
+              </button>
+            ) : (
+              <p className="text-center">Perfect Score! No pairs to review.</p>
+            )}
+            <button
+              onClick={resetGame}
+              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors"
+            >
+              Start New Game
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
