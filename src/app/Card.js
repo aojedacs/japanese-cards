@@ -1,23 +1,29 @@
-export default function Card({ item, isFlipped, onClick }) {
+export default function Card({ item, onClick, type, isSelected, isMatched }) {
     return (
       <div 
         className={`
-          cursor-pointer 
-          h-24 
+          ${isMatched ? 'scale-0 w-0 h-0 m-0 p-0 opacity-0' : 'cursor-pointer hover:scale-105'} 
+          aspect-square
           flex 
           items-center 
           justify-center 
-          text-2xl 
+          text-xl
           rounded-lg 
-          ${isFlipped ? 'bg-blue-500 text-white' : 'bg-gray-200'}
+          ${type === 'hiragana' 
+            ? isSelected
+              ? 'bg-pink-400 text-black scale-110 shadow-[0_0_15px_rgba(244,114,182,0.7)]' 
+              : 'bg-pink-200 text-black'
+            : isSelected
+              ? 'bg-orange-300 text-black scale-110 shadow-[0_0_15px_rgba(253,186,116,0.7)]' 
+              : 'bg-orange-200 text-black'
+          }
           transition-all 
-          duration-300 
+          duration-500 
           transform 
-          hover:scale-105
         `}
-        onClick={onClick}
+        onClick={() => !isMatched && onClick()}
       >
-        {isFlipped ? item : '?'}
+        {item}
       </div>
     );
   }
