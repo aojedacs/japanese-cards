@@ -60,6 +60,7 @@ export default function Home() {
   const [selectedCards, setSelectedCards] = useState([]);
   const [score, setScore] = useState(0);
   const [missedPairs, setMissedPairs] = useState([]);
+  const [incorrectPairs, setIncorrectPairs] = useState([]);
 
   const startGame = (pairsCount) => {
     setPairsPerLevel(pairsCount);
@@ -119,16 +120,17 @@ export default function Home() {
         );
         setSelectedCards([]);
 
-        // Check if all pairs are matched
         if (newScore === pairsPerLevel) {
           setTimeout(() => {
             nextLevel();
           }, 500);
         }
       } else {
+        setIncorrectPairs(newSelectedCards);
         setTimeout(() => {
+          setIncorrectPairs([]);
           setSelectedCards([]);
-        }, 1000);
+        }, 500);
       }
     }
   };
@@ -176,32 +178,6 @@ export default function Home() {
     }
   };
 
-  // const initializeLevel = (level) => {
-  //   const levelPairs = groupedPairs[level] || [];
-  //   if (levelPairs.length === 0) return;
-
-  //   const gameCards = [
-  //     ...levelPairs.map((pair) => ({
-  //       content: pair.hiragana,
-  //       type: "hiragana",
-  //       matched: false,
-  //       pairId: pair.romaji,
-  //       id: Math.random(),
-  //     })),
-  //     ...levelPairs.map((pair) => ({
-  //       content: pair.romaji,
-  //       type: "romaji",
-  //       matched: false,
-  //       pairId: pair.romaji,
-  //       id: Math.random(),
-  //     })),
-  //   ];
-
-  //   setCards(gameCards.sort(() => Math.random() - 0.5));
-  //   setScore(0);
-  //   setSelectedCards([]);
-  // };
-
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
@@ -221,70 +197,81 @@ export default function Home() {
     );
   }
   return (
-    <div className="flex flex-col items-center gap-8 p-4">
-      <div className="flex justify-between w-full max-w-4xl">
-        <div className="text-2xl font-bold">Level {currentLevel + 1}</div>
-        <div className="text-2xl font-bold">
-          Score: {score}/{pairsPerLevel}
+    <div className="flex min-h-screen h-full gap-8 p-4">
+      <div className="flex-1 flex flex-col gap-8">
+        <div className="flex justify-between w-full">
+          <div className="text-2xl font-bold">Level {currentLevel + 1}</div>
+          <div className="text-2xl font-bold">
+            Score: {score}/{pairsPerLevel}
+          </div>
+          <button
+            onClick={nextLevel}
+            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+          >
+            Next Level →
+          </button>
         </div>
-        <button
-          onClick={nextLevel}
-          className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
-        >
-          Next Level →
-        </button>
-      </div>
 
-      {missedPairs.length > 0 && (
-        <div className="w-full max-w-4xl bg-yellow-100 p-4 rounded-lg">
-          <h3 className="font-bold mb-2">Pairs to Review:</h3>
-          <div className="flex flex-wrap gap-4">
-            {missedPairs.map((pair, index) => (
-              <div key={index} className="flex gap-2 bg-white p-2 rounded">
-                <span>{pair.hiragana}</span>
-                <span>-</span>
-                <span>{pair.romaji}</span>
-              </div>
-            ))}
+        <div className="flex-1 flex flex-col md:flex-row gap-8">
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4 content-start">
+            {cards
+              .filter((card) => card.type === "hiragana")
+              .map((card) => (
+                <Card
+                  key={card.id}
+                  item={card.content}
+                  type={card.type}
+                  isFlipped={true}
+                  isSelected={selectedCards.some(
+                    (selected) => selected.id === card.id
+                  )}
+                  isMatched={card.matched}
+                  isIncorrect={incorrectPairs.some(
+                    (incorrect) => incorrect.id === card.id
+                  )}
+                  onClick={() => handleCardClick(card)}
+                />
+              ))}
+          </div>
+
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4 content-start">
+            {cards
+              .filter((card) => card.type === "romaji")
+              .map((card) => (
+                <Card
+                  key={card.id}
+                  item={card.content}
+                  type={card.type}
+                  isFlipped={true}
+                  isSelected={selectedCards.some(
+                    (selected) => selected.id === card.id
+                  )}
+                  isMatched={card.matched}
+                  isIncorrect={incorrectPairs.some(
+                    (incorrect) => incorrect.id === card.id
+                  )}
+                  onClick={() => handleCardClick(card)}
+                />
+              ))}
           </div>
         </div>
-      )}
+      </div>
 
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
-          {cards
-            .filter((card) => card.type === "hiragana")
-            .map((card) => (
-              <Card
-                key={card.id}
-                item={card.content}
-                type={card.type}
-                isFlipped={true}
-                isSelected={selectedCards.some(
-                  (selected) => selected.id === card.id
-                )}
-                isMatched={card.matched}
-                onClick={() => handleCardClick(card)}
-              />
-            ))}
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1">
-          {cards
-            .filter((card) => card.type === "romaji")
-            .map((card) => (
-              <Card
-                key={card.id}
-                item={card.content}
-                type={card.type}
-                isFlipped={true}
-                isSelected={selectedCards.some(
-                  (selected) => selected.id === card.id
-                )}
-                isMatched={card.matched}
-                onClick={() => handleCardClick(card)}
-              />
-            ))}
+      <div className="hidden lg:block w-80 bg-yellow-100 p-4 rounded-lg h-fit sticky top-4">
+        <h3 className="font-bold mb-4 text-lg text-[#212121]">
+          Pairs to Review
+        </h3>
+        <div className="flex flex-col gap-2">
+          {missedPairs.map((pair, index) => (
+            <div
+              key={index}
+              className="flex gap-2 bg-white p-3 rounded items-center justify-between text-[#212121]"
+            >
+              <span className="text-xl">{pair.hiragana}</span>
+              <span>-</span>
+              <span>{pair.romaji}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

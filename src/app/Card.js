@@ -1,4 +1,4 @@
-export default function Card({ item, onClick, type, isSelected, isMatched }) {
+export default function Card({ item, onClick, type, isSelected, isMatched, isIncorrect }) {
     return (
       <div 
         className={`
@@ -7,19 +7,25 @@ export default function Card({ item, onClick, type, isSelected, isMatched }) {
           flex 
           items-center 
           justify-center 
-          text-xl
+          text-5xl
+          font-bold
           rounded-lg 
           ${type === 'hiragana' 
-            ? isSelected
-              ? 'bg-pink-400 text-black scale-110 shadow-[0_0_15px_rgba(244,114,182,0.7)]' 
-              : 'bg-pink-200 text-black'
-            : isSelected
-              ? 'bg-orange-300 text-black scale-110 shadow-[0_0_15px_rgba(253,186,116,0.7)]' 
-              : 'bg-orange-200 text-black'
+            ? isIncorrect
+              ? 'bg-red-400 text-white scale-110 shadow-[0_0_15px_rgba(239,68,68,0.7)]'
+              : isSelected
+                ? 'bg-green-400 text-black scale-110 shadow-[0_0_15px_rgba(74,222,128,0.7)]' 
+                : 'bg-green-200 text-black'
+            : isIncorrect
+              ? 'bg-red-400 text-white scale-110 shadow-[0_0_15px_rgba(239,68,68,0.7)]'
+              : isSelected
+                ? 'bg-blue-400 text-black scale-110 shadow-[0_0_15px_rgba(96,165,250,0.7)]' 
+                : 'bg-blue-200 text-black'
           }
-          transition-all 
-          duration-500 
-          transform 
+          transition-colors
+          transition-transform
+          duration-300
+          ease-in-out
         `}
         onClick={() => !isMatched && onClick()}
       >
@@ -27,3 +33,4 @@ export default function Card({ item, onClick, type, isSelected, isMatched }) {
       </div>
     );
   }
+  
