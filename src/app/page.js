@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import Card from "./Card";
 
@@ -181,6 +180,7 @@ export default function Home() {
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8">
+        <div className="text-4xl font-bold">ひらがな - Romaji</div>
         <h1 className="text-3xl font-bold">Choose Pairs per Level</h1>
         <div className="flex gap-4">
           {[5, 10, 15, 20].map((count) => (
@@ -193,6 +193,7 @@ export default function Home() {
             </button>
           ))}
         </div>
+
       </div>
     );
   }
